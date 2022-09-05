@@ -90,7 +90,7 @@ WHERE postcode =
 							
 							SELECT T.Postcode
 							FROM T
-			    			WHERE T.RANK_NO = 1
+			    			WHERE T.RANK_NO = 2
 				)
 
 )
