@@ -1,7 +1,14 @@
 {{ config(materialized='table') }}
 
+WITH final_liveability AS (
+WITH CHOICES AS (
+		SELECT SPLIT(ui2.What_are_you_interested_in_the_area,',') as OPTION
+					,RANK() over (
+						ORDER BY ui2.Create_Date DESC
+								) AS RANK_NO2
+								FROM `streamdata.user_input` ui2
+)
 
-with transform_liveability as (
 SELECT * 
 FROM
 	(
@@ -77,22 +84,24 @@ FROM
 	FROM liveability.sportingclubs sport
 
 )
-WHERE postcode = 
-              (WITH T AS 
-								(
-								SELECT ui.Name as Name
-      					        ,ui.New_Postcode as Postcode
-      				        	,RANK() over (
-        			        	ORDER BY ui.Timestamp DESC
-      				        	            ) AS RANK_NO
-								FROM `streamdata.user_input` ui
-								)
-							
-							SELECT T.Postcode
-							FROM T
-			    			WHERE T.RANK_NO = 1
-				)
+WHERE postcode = (WITH LOCATION AS (
+		SELECT  ui1.New_Postcode as Postcode			
+				   ,RANK() over (
+						 ORDER BY ui1.Create_Date DESC
+      					) AS RANK_NO1
+								FROM `streamdata.user_input` ui1
+		)
+						
+		SELECT LOCATION.Postcode
+		FROM LOCATION
+		WHERE LOCATION.RANK_NO1 = 5
+	)
+
+AND category IN UNNEST((SELECT CHOICES.OPTION 
+												FROM CHOICES
+												WHERE CHOICES.RANK_NO2 = 5
+												) )
 
 )
-select * from transform_liveability
+select * from final_liveability
 
